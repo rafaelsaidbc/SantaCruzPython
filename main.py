@@ -8,10 +8,10 @@ from tkinter import *
 # função para conectar a credencial de acesso ao Firebase, utilizando o arquivo json como chave de autenticação
 def conexao_database():
     #cria a credencial necessária para acesso ao Firebase
-    cred = credentials.Certificate('C:\\Users\\Usuario\\Documents\\Rafael\\Projetos\\SantaCruz\\santa-cruz-veterano-firebase-adminsdk-clhhp-2d5d4730e6.json')
+    cred = credentials.Certificate('path')
     #inicializa a conexão com o Firebase, utilizando a credencial e o endereço do Firebase
     firebase_admin.initialize_app(cred, {
-    'databaseURL' : 'https://santa-cruz-veterano.firebaseio.com'})
+    'databaseURL' : 'site/firebase'})
 
 
 #execução da função para conectar à database do Firebase
