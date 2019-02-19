@@ -8,7 +8,8 @@ from tkinter import *
 # função para conectar a credencial de acesso ao Firebase, utilizando o arquivo json como chave de autenticação
 def conexao_database():
     #cria a credencial necessária para acesso ao Firebase
-    cred = credentials.Certificate('C:\\Users\\Usuario\\Documents\\Rafael\\Projetos\\SantaCruz\\santa-cruz-veterano-firebase-adminsdk-clhhp-2d5d4730e6.json')
+    cred = credentials.Certificate(
+        'C:\\Users\\Usuario\\Documents\\Rafael\\Projetos\\SantaCruz\\santa-cruz-veterano-firebase-adminsdk-clhhp-9129ce246c.json')
     #inicializa a conexão com o Firebase, utilizando a credencial e o endereço do Firebase
     firebase_admin.initialize_app(cred, {
     'databaseURL' : 'https://santa-cruz-veterano.firebaseio.com'})
@@ -19,6 +20,142 @@ conexao_database()
 
 # define a fonte dos textos dos botões
 LARGE_FONT = ("Verdana", 12)
+
+
+# função para adicionar novas partidas no calendário
+def adicionar_calendario():
+    # Get a database reference to our Firebase database.
+    ref = db.reference()
+    # pega a child calendario e armazena na variável posts_ref
+    posts_ref = ref.child('calendario')
+    # push para colocar os dados no Firebase
+    new_post = posts_ref.push()
+    # cria um dicionário com os dados das partidas, usa o .get() para parsear a Entry para String
+    dicionario_calendario = {
+        'adversarioAddCalendario': adversario_calendario.get(),
+        'anoAddCalendario': ano_calendario.get(),
+        'dataAddCalendario': data_calendario.get(),
+        'horaAddCalendario': hora_calendario.get(),
+        'idAddCalendario': id_jogo_calendario.get(),
+        'localAddCalendario': local_calendario.get()
+    }
+    # posta os dados da partida no Firebase
+    new_post.set(dicionario_calendario)
+
+
+# função para exibir a janela na qual serão inseridos os dados do calendário de jogos
+def calendario_janela():
+    janela_calendario = Toplevel()
+    # janela para inserção de novas partidas no calendário
+    janela_calendario.title('Cadastro de novo jogo')
+    # define os Labels na janela
+    Label(janela_calendario, text='Ano').grid(row=0)
+    Label(janela_calendario, text='Jogo nº').grid(row=1)
+    Label(janela_calendario, text='Data').grid(row=2)
+    Label(janela_calendario, text='Hora').grid(row=3)
+    Label(janela_calendario, text='Adversário').grid(row=4)
+    Label(janela_calendario, text='Local').grid(row=5)
+    # solicita ao usuário que insira os dados da partida
+    global ano_calendario
+    ano_calendario = Entry(janela_calendario)
+    global id_jogo_calendario
+    id_jogo_calendario = Entry(janela_calendario)
+    global data_calendario
+    data_calendario = Entry(janela_calendario)
+    global hora_calendario
+    hora_calendario = Entry(janela_calendario)
+    global adversario_calendario
+    adversario_calendario = Entry(janela_calendario)
+    global local_calendario
+    local_calendario = Entry(janela_calendario)
+    # localiza os Entry na janela
+    ano_calendario.grid(row=0, column=1)
+    id_jogo_calendario.grid(row=1, column=1)
+    data_calendario.grid(row=2, column=1)
+    hora_calendario.grid(row=3, column=1)
+    adversario_calendario.grid(row=4, column=1)
+    local_calendario.grid(row=5, column=1)
+    # botão para inserir os dados no Firebase
+    btn_adicionar = Button(janela_calendario, text='Inserir', command=adicionar_calendario).grid(row=6, column=1,
+                                                                                                 sticky=W, pady=4)
+
+
+# função para exibir uma nova janela com o calendário de jogos marcados
+def exibicao_calendario():
+    # obtém os dados do calendário de jogos cadastrados no Firebase
+    calendario = db.reference('calendario').get()
+    # cria um dicionário vazio para inserir os dados dos próximos jogos
+    dicionario_calendario = {}
+    # cria uma lista de jogos vazia para ser splitada posteriormente para exibição de cada partida separado
+    lista_jogos = []
+    for keys in calendario.items():
+        # pega a posição 1 do dicionário anterior (que traz as informações sobre os resultados, e armazena na variável dados
+        dados = keys[1]
+        # demenbra o dicionário da variável dados em chave e valor
+        for chave, valor in dados.items():
+            # obtém as informações do calendário
+            if chave == 'adversarioAddCalendario':
+                adversario = valor
+            if chave == 'anoAddCalendario':
+                ano = valor
+            if chave == 'dataAddCalendario':
+                data = valor
+            if chave == 'horaAddCalendario':
+                hora = valor
+            if chave == 'idAddCalendario':
+                id_jogo = valor
+            if chave == 'localAddCalendario':
+                local = valor
+                # insere todas as informações de cada jogo no dicionário
+                dicionario_calendario['Jogo nº'] = id_jogo
+                dicionario_calendario['Data'] = data
+                dicionario_calendario['Hora'] = hora
+                dicionario_calendario['Santa Cruz'] = 'Santa Cruz x '
+                dicionario_calendario['Adversario'] = adversario
+                dicionario_calendario['Local'] = local
+                # faz uma cópia do dicionário com os dados de cada jogo
+                copia_calendario = dicionario_calendario.copy()
+                # insere os dados do dicionário de cada jogo em uma lista
+                lista_jogos.append(copia_calendario)
+                # esvazia o dicionário para que as informações dos próximos jogos sejam inseridas
+                copia_calendario = {}
+
+    # função para definir como será exibida a lista dos próximos jogos
+    def lista_calendario():
+        lista_calendario_janela = Toplevel()
+        lista_calendario_janela.title("PRÓXIMAS PARTIDAS")
+        t = Text(lista_calendario_janela)
+        t.insert(END, 'CALENDÁRIO DE JOGOS')
+        t.insert(END, '\n')
+        for elemento in lista_jogos:
+            for item, valor in elemento.items():
+                if item == 'Jogo nº':
+                    id_jogo = 'Jogo nº ' + valor
+                if item == 'Data':
+                    data = 'Data: ' + valor
+                if item == 'Hora':
+                    hora = ' - Hora: ' + valor
+                if item == 'Santa Cruz':
+                    santa_cruz = 'Santa Cruz x '
+                if item == 'Adversario':
+                    adversario = valor
+                if item == 'Local':
+                    local = 'Local: ' + valor
+                    t.insert(END, '\n\n')
+                    t.insert(END, id_jogo)
+                    t.insert(END, '\n')
+                    t.insert(END, data)
+                    t.insert(END, hora)
+                    t.insert(END, '\n')
+                    t.insert(END, santa_cruz)
+                    t.insert(END, adversario)
+                    t.insert(END, '\n')
+                    t.insert(END, local)
+                    t.insert(END, '\n\n')
+                    t.insert(END, '*' * 50)
+        t.pack()
+
+    lista_calendario()
 
 
 # função para obter os resultados do ano 2016
@@ -568,6 +705,7 @@ class SantaCruz(tk.Tk):
         frame.tkraise()
 
 
+#classe de exibição da página inicial do programa
 class PaginaInicial(tk.Frame):
 
     def __init__(self, parent, controller):
@@ -587,6 +725,7 @@ class PaginaInicial(tk.Frame):
         button3.pack()
 
 
+#página de exibição do calendário
 class PaginaCalendario(tk.Frame):
 
     def __init__(self, parent, controller):
@@ -594,14 +733,18 @@ class PaginaCalendario(tk.Frame):
         label = tk.Label(self, text="Calendário", font=LARGE_FONT)
         label.pack(pady=10, padx=10)
 
-        button1 = tk.Button(self, text='Cadastrar', command=lambda: controller.show_frame())
+        button1 = tk.Button(self, text='Cadastrar', command=calendario_janela)
         button1.pack()
 
-        button2 = tk.Button(self, text="Voltar",
-                            command=lambda: controller.show_frame(PaginaInicial))
+        button2 = tk.Button(self, text='Próximos jogos', command=exibicao_calendario)
         button2.pack()
 
+        button3 = tk.Button(self, text="Voltar",
+                            command=lambda: controller.show_frame(PaginaInicial))
+        button3.pack()
 
+
+#página de exibição dos resultados
 class PaginaResultados(tk.Frame):
 
     def __init__(self, parent, controller):
@@ -626,6 +769,7 @@ class PaginaResultados(tk.Frame):
         button4.pack()
 
 
+#página de exibição das estatísticas
 class PaginaEstatisticas(tk.Frame):
 
     def __init__(self, parent, controller):
@@ -650,6 +794,6 @@ class PaginaEstatisticas(tk.Frame):
         button4.pack()
 
 
-# execução da classe Santa Cruz, a classe principal do programa
+#execução da classe Santa Cruz, a classe principal do programa
 app = SantaCruz()
 app.mainloop()
